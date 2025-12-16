@@ -66,16 +66,28 @@ class CaregiverDashboardView(APIView):
         data = []
         for child in children:
             # Calculate simple status
-            # Logic: Red if 'is_at_risk', Amber if no encounter in 30 days, else Green
-            status = 'green'
-            status_text = 'All checks up to date'
-            
+            # Calculate age for logic
+            import datetime
+            today = datetime.date.today()
+            age_days = (today - child.date_of_birth).days
+            age_months = int(age_days / 30)
+
+            # Check for overdue milestones
+            # Overdue = expected_age <= current_age, and NOT completed
+            overdue_count = child.milestones.filter(
+                is_completed=False,
+                template__expected_age_months__lte=age_months
+            ).count()
+
             if child.is_at_risk:
                 status = 'red'
                 status_text = 'Doctor review ongoing'
-            elif not child.encounters.exists():
+            elif overdue_count > 0:
                  status = 'amber'
                  status_text = 'Screening pending'
+            else:
+                 status = 'green'
+                 status_text = 'None pending'
             
             # Calculate age (rough)
             # ... simple string for now
@@ -171,37 +183,39 @@ class ChildTimelineView(APIView):
             })
 
 
-        # 4. Determine Next Action based on Active Milestones
-        # Find the first 'ACTIVE' milestone
-        active_milestone = next((m for m in milestones_data if m['state'] == 'ACTIVE'), None)
+        # 4. Determine Pending Actions based on Active Milestones
+        # Find ALL 'ACTIVE' milestones
+        active_milestones = [m for m in milestones_data if m['state'] == 'ACTIVE']
         
-        next_action_data = None
-        if active_milestone:
-            next_action_data = {
-                'type': 'video',
-                'title': f"Verify '{active_milestone['title']}'",
-                'description': f"Is {child.first_name} {active_milestone['description'].lower()}? Record a video for AI analysis.",
-                'action_label': 'Start Recording',
-                'milestone_id': active_milestone['id']
-            }
+        pending_actions = []
+        
+        if active_milestones:
+            for active in active_milestones:
+                pending_actions.append({
+                    'type': 'video',
+                    'title': f"Verify '{active['title']}'",
+                    'description': f"Is {child.first_name} {active['description'].lower()}? Record a video for AI analysis.",
+                    'action_label': 'Start Recording',
+                    'milestone_id': active['id']
+                })
         else:
-            # Fallback if no active milestones (e.g. all future locked or all past won)
-            # Could check for next locked one, or generic
-            next_action_data = {
+            # Fallback if no active milestones
+            pending_actions.append({
                 'type': 'generic',
                 'title': 'All Caught Up!',
                 'description': f"{child.first_name} is doing great. No pending actions.",
                 'action_label': 'View History'
-            }
+            })
 
         return Response({
             'child': {
                 'id': child.id,
                 'name': child.first_name,
                 'age': f"{age_months} months",
+                'birth_date': child.date_of_birth,
                 'status': 'green' if not child.is_at_risk else 'red'
             },
             'timeline': timeline,
             'milestones': milestones_data,
-            'next_action': next_action_data
+            'pending_actions': pending_actions
         })

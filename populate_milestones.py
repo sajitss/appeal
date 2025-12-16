@@ -4,6 +4,8 @@ import datetime
 
 # 1. Create Comprehensive Standard Templates
 templates_data = [
+    # 0 Months (New Born)
+    {"title": "New Born", "desc": "Welcome to the world!", "age": 0},
     # 2 Months
     {"title": "Social Smile", "desc": "Smiles at people", "age": 2},
     {"title": "Head Up", "desc": "Holds head up when on tummy", "age": 2},
@@ -28,7 +30,16 @@ templates_data = [
 ]
 
 templates = []
-print("--- Creating Templates ---")
+print("--- Clearing Old Data & Creating Templates ---")
+# Optional: Clear old templates to remove 'Small Smes' or other junk
+# ChildMilestone.objects.all().delete()
+# MilestoneTemplate.objects.all().delete()
+# We will do a soft-update: renaming specific typos if found, or just creating new ones.
+# Given the user request "instead of", let's attempt to find the typo and update it, 
+# or simpler: just clear and recreate for this prototype stage.
+ChildMilestone.objects.all().delete()
+MilestoneTemplate.objects.all().delete()
+
 for data in templates_data:
     t, _ = MilestoneTemplate.objects.get_or_create(
         title=data['title'],

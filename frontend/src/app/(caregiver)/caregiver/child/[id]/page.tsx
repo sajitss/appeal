@@ -19,7 +19,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
     const [child, setChild] = useState<any>(null)
     const [timeline, setTimeline] = useState<TimelineEvent[]>([])
     const [milestones, setMilestones] = useState<any[]>([])
-    const [nextAction, setNextAction] = useState<any>(null)
+    const [pendingActions, setPendingActions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const router = useRouter()
 
@@ -30,7 +30,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                 setChild(response.data.child)
                 setTimeline(response.data.timeline)
                 setMilestones(response.data.milestones)
-                setNextAction(response.data.next_action)
+                setPendingActions(response.data.pending_actions || [])
             } catch (error) {
                 console.error("Failed to load timeline", error)
             } finally {
@@ -58,46 +58,137 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
 
             <div className="flex-1 p-4 space-y-6">
 
-                {/* Next Action */}
-                {nextAction && (
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 shadow-sm">
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className="text-2xl">🎥</span>
-                            <div>
-                                <h3 className="font-bold text-amber-900">{nextAction.title}</h3>
-                                <p className="text-xs text-amber-700">{nextAction.description}</p>
+                {/* Pending Actions Stack */}
+                {pendingActions.length > 0 && (
+                    <div className="space-y-3">
+                        {pendingActions.map((action: any, idx: number) => (
+                            <div key={idx}
+                                className="bg-amber-50 border border-amber-100 rounded-xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2 cursor-pointer hover:bg-amber-100/80 hover:border-amber-200 transition-all active:scale-[0.99] group"
+                                style={{ animationDelay: `${idx * 100}ms` }}
+                                onClick={() => {
+                                    if (action.type !== 'generic') {
+                                        router.push(`/caregiver/child/${id}/record?milestone_id=${action.milestone_id}`)
+                                    }
+                                }}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-shrink-0 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm text-xl group-hover:scale-110 transition-transform">
+                                        {action.type === 'video' ? '🎥' : action.type === 'generic' ? '🎉' : '📝'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-amber-900 text-sm group-hover:text-amber-800">{action.title}</h3>
+                                        <p className="text-xs text-amber-700/80 leading-tight mt-0.5">{action.description}</p>
+                                    </div>
+
+                                    {/* Chevron for affordance */}
+                                    {action.type !== 'generic' && (
+                                        <div className="text-amber-300 group-hover:text-amber-500 transition-colors text-lg">
+                                            ➔
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                            onClick={() => router.push(`/caregiver/child/${id}/record`)}
-                        >
-                            {nextAction.action_label}
-                        </Button>
+                        ))}
                     </div>
                 )}
 
                 {/* Milestones Path */}
                 <div className="space-y-4">
                     <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">My Journey</h2>
-                    <div className="flex gap-4 overflow-x-auto pb-4">
-                        {milestones.map((m: any, idx: number) => (
-                            <div key={idx} className={`min-w-[140px] p-4 rounded-xl border flex flex-col items-center text-center relative ${m.state === 'WON' ? 'bg-yellow-50 border-yellow-200' :
-                                m.state === 'ACTIVE' ? 'bg-white border-blue-200 shadow-md ring-2 ring-blue-100' :
-                                    'bg-gray-50 border-gray-100 opacity-70 grayscale'
-                                }`}>
-                                <div className="text-3xl mb-2">
-                                    {m.state === 'WON' ? '🏆' : m.state === 'LOCKED' ? '🔒' : '⭐'}
-                                </div>
-                                <h3 className="font-bold text-sm text-gray-800 leading-tight mb-1">{m.title}</h3>
-                                <p className="text-[10px] text-gray-500">{m.expected_age}</p>
 
-                                {m.state === 'ACTIVE' && (
-                                    <span className="absolute -top-2 bg-blue-500 text-white text-[9px] px-2 py-0.5 rounded-full">
-                                        Current
-                                    </span>
-                                )}
-                            </div>
-                        ))}
+                    {/* Seasonal Scroll Container */}
+                    <div className="w-full overflow-x-auto rounded-2xl border bg-gray-50 shadow-inner">
+                        <div className="flex min-w-max">
+                            {milestones.map((m: any, idx: number) => {
+                                // 1. Calculate Date & Season
+                                const getSeasonInfo = (dob: string, ageStr: string) => {
+                                    if (!dob) return { label: '---', styles: 'bg-gray-100', icon: '' }
+
+                                    const months = parseInt(ageStr) || 0
+                                    const d = new Date(dob)
+                                    d.setMonth(d.getMonth() + months)
+
+                                    const monthIndex = d.getMonth()
+                                    const monthName = d.toLocaleString('default', { month: 'short' })
+                                    const year = d.getFullYear()
+
+                                    // Season Themes (Gradients)
+                                    // Winter: Dec(11), Jan(0), Feb(1)
+                                    if (monthIndex === 11 || monthIndex <= 1) return {
+                                        label: `${monthName} ${year}`,
+                                        styles: 'bg-gradient-to-b from-sky-50 to-indigo-50 border-r border-sky-100',
+                                        icon: '❄️',
+                                        text: 'text-sky-900'
+                                    }
+                                    // Spring: Mar(2)-May(4)
+                                    if (monthIndex >= 2 && monthIndex <= 4) return {
+                                        label: `${monthName} ${year}`,
+                                        styles: 'bg-gradient-to-b from-green-50 to-emerald-50 border-r border-green-100',
+                                        icon: '🌱',
+                                        text: 'text-emerald-900'
+                                    }
+                                    // Summer: Jun(5)-Aug(7)
+                                    if (monthIndex >= 5 && monthIndex <= 7) return {
+                                        label: `${monthName} ${year}`,
+                                        styles: 'bg-gradient-to-b from-yellow-50 to-amber-50 border-r border-yellow-100',
+                                        icon: '☀️',
+                                        text: 'text-amber-900'
+                                    }
+                                    // Autumn: Sep(8)-Nov(10)
+                                    return {
+                                        label: `${monthName} ${year}`,
+                                        styles: 'bg-gradient-to-b from-orange-50 to-red-50 border-r border-orange-100',
+                                        icon: '🍂',
+                                        text: 'text-orange-900'
+                                    }
+                                }
+
+                                const season = getSeasonInfo(child.birth_date, m.expected_age)
+
+                                return (
+                                    <div key={idx} className={`relative p-4 pb-8 flex flex-col items-center justify-between min-w-[160px] ${season.styles}`}>
+
+                                        {/* Floating Card */}
+                                        {/* Floating Card */}
+                                        <div className={`w-full p-4 rounded-xl border flex flex-col items-center text-center relative z-10 transition-transform hover:-translate-y-1 ${m.state === 'WON' ? 'bg-white/90 border-yellow-200 shadow-sm' :
+                                            m.state === 'ACTIVE' ? 'bg-white border-blue-400 shadow-lg ring-4 ring-blue-50 scale-105 cursor-pointer hover:bg-blue-50' :
+                                                'bg-white/40 border-gray-100 opacity-60 grayscale'
+                                            }`}
+                                            onClick={() => {
+                                                if (m.state === 'ACTIVE') {
+                                                    router.push(`/caregiver/child/${id}/record?milestone_id=${m.id}`)
+                                                }
+                                            }}
+                                        >
+                                            <div className="text-3xl mb-2">
+                                                {m.state === 'WON' ? '🏆' : m.state === 'LOCKED' ? '🔒' : '⭐'}
+                                            </div>
+                                            <h3 className="font-bold text-sm text-gray-800 leading-tight mb-1">{m.title}</h3>
+                                            <p className="text-[10px] text-gray-500">{m.expected_age}</p>
+
+                                            {m.state === 'ACTIVE' && (
+                                                <span className="absolute -top-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm blink-animation">
+                                                    Pending
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Connector Line */}
+                                        <div className="h-6 w-0.5 bg-black/5 mt-2 mb-1"></div>
+
+                                        {/* Season/Date Label */}
+                                        <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide opacity-80 ${season.text}`}>
+                                            <span>{season.label}</span>
+                                        </div>
+
+                                        {/* Background Watermark Icon */}
+                                        <div className="absolute bottom-2 right-2 text-6xl opacity-5 pointer-events-none select-none">
+                                            {season.icon}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
 
