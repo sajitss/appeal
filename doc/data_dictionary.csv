@@ -1,0 +1,73 @@
+Entity,Field,Type,Description
+Child,first_name,String,Child’s given name
+Child,last_name,String,Optional surname
+Child,date_of_birth,Date,Birth date
+Child,gender,Enum,male/female/other
+Child,birth_weight,Decimal,Optional
+Child,birth_height,Decimal,Optional
+Child,gestational_age_weeks,Integer,Optional
+Child,unique_child_id,String,Program identifier
+Child,village_id,FK(Village),Location mapping
+Child,created_at,DateTime,Record creation timestamp
+Child,updated_at,DateTime,Record updated timestamp
+Caregiver,name,String,Caregiver full name
+Caregiver,phone,String,Mobile number
+Caregiver,email,String,Optional
+Caregiver,relationship,String,Mother/Father/Guardian
+Caregiver,language_preference,String,Preferred language
+ChildCaregiver,child_id,FK(Child),Child reference
+ChildCaregiver,caregiver_id,FK(Caregiver),Caregiver reference
+ChildCaregiver,relationship,Enum,mother/father/guardian
+Encounter,child_id,FK(Child),Subject child
+Encounter,worker_id,FK(UserProfile),Worker conducting visit
+Encounter,encounter_type,Enum,home_visit/clinic/teleconsult
+Encounter,visit_date,DateTime,Visit timestamp
+Encounter,notes,Text,Free text observations
+DevelopmentalTask,name,String,Task name
+DevelopmentalTask,stage_id,FK(DevelopmentalStage),Linked stage
+DevelopmentalTask,domain,Enum,motor/cognitive/social/speech
+MediaAsset,file_url,String,Storage URL
+MediaAsset,media_type,Enum,video/image
+MediaAsset,file_size,Integer,Bytes
+MediaAsset,checksum,String,Integrity hash
+DevelopmentalVideo,child_id,FK(Child),Child reference
+DevelopmentalVideo,task_id,FK(DevelopmentalTask),Task reference
+DevelopmentalVideo,media_asset_id,FK(MediaAsset),Video asset
+DevelopmentalVideo,capture_time,DateTime,When recorded
+AIModel,name,String,Model name
+AIModel,version,String,Model version
+AIInferenceJob,video_id,FK(DevelopmentalVideo),Processed video
+AIInferenceJob,model_id,FK(AIModel),Model used
+AIInferenceJob,status,Enum,submitted/processing/completed
+AIObservation,inference_job_id,FK(AIInferenceJob),Source job
+AIObservation,value_json,JSON,Structured model output
+AIObservation,confidence,Decimal,0–1 score
+RiskAssessment,child_id,FK(Child),Linked child
+RiskAssessment,overall_risk,Enum,green/amber/red
+RiskAssessment,justification,Text,Explanation
+Case,child_id,FK(Child),Child reference
+Case,status,Enum,open/in_review/closed
+Case,opened_at,DateTime,Case start time
+CaseEvent,case_id,FK(Case),Case reference
+CaseEvent,event_type,String,Event name
+CaseEvent,notes,Text,Description
+TeleConsultRequest,case_id,FK(Case),Linked case
+TeleConsultRequest,status,Enum,pending/in_progress/completed
+ClinicalImpression,request_id,FK(TeleConsultRequest),Linked request
+ClinicalImpression,impression_text,Text,Doctor interpretation
+Task,child_id,FK(Child),Task subject
+Task,task_type,String,screening/video/followup
+Task,assigned_to,FK(UserProfile),Assigned worker
+Task,due_date,Date,Deadline
+Task,status,Enum,pending/in_progress/completed
+TaskEvent,task_id,FK(Task),Linked task
+TaskEvent,event_type,String,Status change
+TaskEvent,timestamp,DateTime,When event occurred
+Consent,child_id,FK(Child),Child reference
+Consent,caregiver_id,FK(Caregiver),Caregiver
+Consent,consent_type,Enum,screening/video/ai/teleconsult
+Consent,granted,Boolean,Yes/No
+AuditLog,user_id,FK(User),User responsible
+AuditLog,action,String,Viewed/Edited
+AuditLog,entity_type,String,Child/Case/Video/etc
+AuditLog,entity_id,UUID,Entity reference
