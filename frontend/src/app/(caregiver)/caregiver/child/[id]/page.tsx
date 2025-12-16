@@ -7,12 +7,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 interface TimelineEvent {
+    id: number
     type: string
     title: string
     date: string
     icon: string
     description: string
     evidence_url?: string
+    status?: string
 }
 
 export default function ChildTimeline({ params }: { params: Promise<{ id: string }> }) {
@@ -25,22 +27,34 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
     const [loading, setLoading] = useState(true)
     const router = useRouter()
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await api.get(`/caregiver/child/${id}/`)
-                setChild(response.data.child)
-                setTimeline(response.data.timeline)
-                setMilestones(response.data.milestones)
-                setPendingActions(response.data.pending_actions || [])
-            } catch (error) {
-                console.error("Failed to load timeline", error)
-            } finally {
-                setLoading(false)
-            }
+    const fetchTimeline = async () => {
+        try {
+            const response = await api.get(`/caregiver/child/${id}/`)
+            setChild(response.data.child)
+            setTimeline(response.data.timeline)
+            setMilestones(response.data.milestones)
+            setPendingActions(response.data.pending_actions || [])
+        } catch (error) {
+            console.error("Failed to load timeline", error)
+        } finally {
+            setLoading(false)
         }
-        fetchData()
+    }
+
+    useEffect(() => {
+        fetchTimeline()
     }, [id])
+
+    const handleForceCompletion = async (milestoneId: number) => {
+        try {
+            await api.post(`/clinical/milestones/${milestoneId}/perform_human_review/`)
+            fetchTimeline() // Refresh UI
+            alert("Milestone forcibly pushed to completion.")
+        } catch (error) {
+            console.error(error)
+            alert("Failed to force completion.")
+        }
+    }
 
     if (loading) return <div className="p-8 text-center">Loading...</div>
     if (!child) return <div className="p-8 text-center">Child not found</div>
@@ -232,8 +246,22 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
 
                                         {/* Video Player */}
                                         {expandedActivity === idx && event.evidence_url && (
-                                            <div className="mt-3 rounded-lg overflow-hidden bg-black animate-in fade-in slide-in-from-top-2" onClick={(e) => e.stopPropagation()}>
-                                                <video src={event.evidence_url} controls className="w-full max-h-60" autoPlay />
+                                            <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                                                <div className="rounded-lg overflow-hidden bg-black shadow-md border border-gray-200 mb-4">
+                                                    <video src={event.evidence_url} controls className="w-full max-h-60" autoPlay />
+                                                </div>
+
+                                                {/* Force Completion Button */}
+                                                {event.status !== 'COMPLETED' && (
+                                                    <div className="flex justify-center mb-2">
+                                                        <Button size="sm" variant="destructive" onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleForceCompletion(event.id)
+                                                        }}>
+                                                            Force Completion
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>

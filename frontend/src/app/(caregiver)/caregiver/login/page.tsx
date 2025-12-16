@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function CaregiverLoginPage() {
     const [phoneNumber, setPhoneNumber] = useState("")
-    const [childId, setChildId] = useState("")
+    const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const router = useRouter()
 
@@ -20,7 +20,7 @@ export default function CaregiverLoginPage() {
         try {
             const response = await api.post("/caregiver/login/", {
                 phone_number: phoneNumber,
-                unique_child_id: childId
+                password: password
             })
 
             // Store simplified auth details
@@ -30,7 +30,7 @@ export default function CaregiverLoginPage() {
             router.push("/caregiver") // Redirect to dashboard
         } catch (err: any) {
             console.error("Login failed", err)
-            setError("Invalid credentials. Please check Phone and Child ID.")
+            setError(err.response?.data?.error || "Invalid credentials. Please check Phone and Password.")
         }
     }
 
@@ -44,7 +44,7 @@ export default function CaregiverLoginPage() {
             <Card className="w-full max-w-sm border-amber-200">
                 <CardHeader>
                     <CardTitle>Welcome</CardTitle>
-                    <CardDescription>Enter your details to view your child's profile.</CardDescription>
+                    <CardDescription>Enter your mobile number and password to login.</CardDescription>
                 </CardHeader>
                 <form onSubmit={handleLogin}>
                     <CardContent className="space-y-4">
@@ -60,12 +60,13 @@ export default function CaregiverLoginPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="childId">Child ID</Label>
+                            <Label htmlFor="password">Password</Label>
                             <Input
-                                id="childId"
-                                placeholder="e.g. CID-1234"
-                                value={childId}
-                                onChange={(e) => setChildId(e.target.value)}
+                                id="password"
+                                placeholder="Enter password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                type="password"
                                 required
                             />
                         </div>
@@ -73,7 +74,7 @@ export default function CaregiverLoginPage() {
                         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700">See My Child</Button>
+                        <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700">Login</Button>
                     </CardFooter>
                 </form>
             </Card>

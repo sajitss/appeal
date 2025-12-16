@@ -17,33 +17,35 @@ class CaregiverLoginView(APIView):
 
     def post(self, request):
         phone = request.data.get('phone_number')
-        child_id = request.data.get('unique_child_id')
+        password = request.data.get('password')
 
-        if not phone or not child_id:
-            return Response({'error': 'Please provide both phone number and Child ID'}, status=status.HTTP_400_BAD_REQUEST)
+        if not phone or not password:
+             return Response({'error': 'Please provide mobile number and password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Find the Child
-        try:
-            child = Child.objects.get(unique_child_id=child_id)
-        except Child.DoesNotExist:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        # 1. Hardcoded Password Check
+        if password != 'appeal':
+             return Response({'error': 'Invalid password'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # 2. Verify Caregiver Phone
-        # Currently Child has a 'caregiver' FK.
-        if not child.caregiver or child.caregiver.phone_number != phone:
-             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        # 2. Find or Create Caregiver
+        caregiver, created = Caregiver.objects.get_or_create(
+            phone_number=phone,
+            defaults={
+                'first_name': 'Parent', 
+                'last_name': '',
+                'relationship': 'GUARDIAN'
+            }
+        )
 
-        # 3. Authenticate/Session
-        # For this prototype, we will return the Child/Caregiver details directly
-        # effectively "logging in" without a User object if we want to skip creating Django Users for every parent.
-        # OR we can return a temporary session token. 
-        # Let's return the simplified Caregiver Object ID to store in Frontend.
+        # 3. Find Primary Child (if any)
+        # Just pick the first one for now
+        child = caregiver.children.first()
+        primary_child_id = child.id if child else None
         
         return Response({
             'message': 'Login successful',
-            'caregiver_id': child.caregiver.id,
-            'caregiver_name': f"{child.caregiver.first_name} {child.caregiver.last_name}",
-            'primary_child_id': child.id 
+            'caregiver_id': caregiver.id,
+            'caregiver_name': f"{caregiver.first_name} {caregiver.last_name}",
+            'primary_child_id': primary_child_id 
         })
 
 class CaregiverDashboardView(APIView):
@@ -72,19 +74,30 @@ class CaregiverDashboardView(APIView):
             age_days = (today - child.date_of_birth).days
             age_months = int(age_days / 30)
 
-            # Check for overdue milestones
-            # Overdue = expected_age <= current_age, and NOT completed
-            overdue_count = child.milestones.filter(
-                is_completed=False,
-                template__expected_age_months__lte=age_months
+            # Check for active/pending milestones (Match TimelineView logic with +1 buffer)
+            cutoff_age = age_months + 1
+            
+            # 1. Actionable (User needs to do something)
+            # Status is PENDING or REJECTED, and age is within range
+            actionable_count = child.milestones.filter(
+                status__in=['PENDING', 'REJECTED'],
+                template__expected_age_months__lte=cutoff_age
+            ).count()
+
+            # 2. In Review (System needs to do something)
+            review_count = child.milestones.filter(
+                status__in=['SUBMITTED', 'AI_REVIEWED']
             ).count()
 
             if child.is_at_risk:
                 status = 'red'
                 status_text = 'Doctor review ongoing'
-            elif overdue_count > 0:
+            elif actionable_count > 0:
                  status = 'amber'
-                 status_text = 'Screening pending'
+                 status_text = f'{actionable_count} tasks pending'
+            elif review_count > 0:
+                 status = 'blue' # Or some other indicator, maybe just amber for now or a new color
+                 status_text = 'In Review'
             else:
                  status = 'green'
                  status_text = 'None pending'
@@ -186,6 +199,7 @@ class ChildTimelineView(APIView):
                 desc = f"Status: {state}"
 
             timeline.append({
+                'id': cm.id,
                 'type': 'milestone_won',
                 'title': title,
                 'date': cm.completion_date if cm.completion_date else datetime.date.today(), # Use today for pending reviews
