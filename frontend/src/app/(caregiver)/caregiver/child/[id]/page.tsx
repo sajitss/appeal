@@ -12,6 +12,7 @@ interface TimelineEvent {
     date: string
     icon: string
     description: string
+    evidence_url?: string
 }
 
 export default function ChildTimeline({ params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +21,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
     const [timeline, setTimeline] = useState<TimelineEvent[]>([])
     const [milestones, setMilestones] = useState<any[]>([])
     const [pendingActions, setPendingActions] = useState<any[]>([])
+    const [expandedActivity, setExpandedActivity] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
 
@@ -192,25 +194,47 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                     </div>
                 </div>
 
-                {/* Timeline */}
-                <div className="space-y-4">
-                    <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Recent Activity</h2>
 
-                    {timeline.map((event, idx) => (
-                        <div key={idx} className="flex gap-4">
-                            <div className="flex flex-col items-center">
-                                <div className="h-8 w-8 bg-white border rounded-full flex items-center justify-center shadow-sm">
-                                    {event.icon}
+                {/* Recent Activity */}
+                <div>
+                    <h3 className="font-bold text-gray-800 mb-4">Recent Activity</h3>
+                    <div className="space-y-4">
+                        {timeline.map((event, idx) => (
+                            <div key={idx}
+                                className={`p-3 bg-gray-50 rounded-xl border border-gray-100 transition-all ${event.evidence_url ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                                onClick={() => {
+                                    if (event.evidence_url) {
+                                        setExpandedActivity(expandedActivity === idx ? null : idx)
+                                    }
+                                }}
+                            >
+                                <div className="flex gap-4">
+                                    <div className="text-2xl pt-1">{event.icon}</div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="font-bold text-gray-900">{event.title}</h4>
+                                            {event.evidence_url && (
+                                                <span className="text-xs text-blue-600 font-medium">
+                                                    {expandedActivity === idx ? 'Close' : 'View Video'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mb-1">
+                                            {new Date(event.date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-sm text-gray-700">{event.description}</p>
+
+                                        {/* Video Player */}
+                                        {expandedActivity === idx && event.evidence_url && (
+                                            <div className="mt-3 rounded-lg overflow-hidden bg-black animate-in fade-in slide-in-from-top-2" onClick={(e) => e.stopPropagation()}>
+                                                <video src={event.evidence_url} controls className="w-full max-h-60" autoPlay />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                {idx < timeline.length - 1 && <div className="w-0.5 h-full bg-gray-200 my-1"></div>}
                             </div>
-                            <div className="bg-white p-3 rounded-lg border shadow-sm flex-1 mb-2">
-                                <h4 className="font-bold text-gray-800 text-sm">{event.title}</h4>
-                                <p className="text-xs text-gray-500">{event.description}</p>
-                                <p className="text-[10px] text-gray-300 mt-1">{new Date(event.date).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

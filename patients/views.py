@@ -29,11 +29,8 @@ class ChildViewSet(viewsets.ModelViewSet):
             for t in templates:
                 cm, created = ChildMilestone.objects.get_or_create(child=child, template=t)
                 
-                # Auto-complete milestones for ages the child has already passed
-                # e.g. If child is 9 months, mark 2m, 4m, 6m as Done.
-                if t.expected_age_months < age_months:
-                    cm.is_completed = True
-                    cm.save()
+                # Default is pending (is_completed=False), so nothing to do here.
+                # Timelines will show them as ACTIVE (Pending) if age >= expected_age.
                     
         except Exception as e:
             print(f"Error populating milestones for {child}: {e}")

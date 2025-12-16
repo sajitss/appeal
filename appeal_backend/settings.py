@@ -146,3 +146,6 @@ REST_FRAMEWORK = {
     ],
 }
 
+MEDIA_URL = '/uploaded_media/'
+MEDIA_ROOT = BASE_DIR / 'uploaded_media'
+

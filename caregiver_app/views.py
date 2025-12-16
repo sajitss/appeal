@@ -89,9 +89,18 @@ class CaregiverDashboardView(APIView):
                  status = 'green'
                  status_text = 'None pending'
             
-            # Calculate age (rough)
-            # ... simple string for now
-            age_str = "1 year" 
+            # Calculate age logic
+            # < 24 months -> X months
+            # >= 24 months -> Y years
+            if age_months < 24:
+                age_str = f"{age_months} months"
+            else:
+                years = age_months // 12
+                remainder_months = age_months % 12
+                if remainder_months > 0:
+                    age_str = f"{years} yrs {remainder_months} mo"
+                else:
+                    age_str = f"{years} years"
 
             data.append({
                 'id': child.id,
@@ -148,8 +157,32 @@ class ChildTimelineView(APIView):
                 'description': desc
             })
 
+        # 3. Add Completed Milestones to Timeline
+        completed_milestones = child.milestones.filter(is_completed=True, completion_date__isnull=False)
+        for cm in completed_milestones:
+            evidence_url = None
+            if cm.evidence:
+                evidence_url = request.build_absolute_uri(cm.evidence.url)
+
+            timeline.append({
+                'type': 'milestone_won',
+                'title': f"Achieved: {cm.template.title}",
+                'date': cm.completion_date, 
+                'icon': '🏆',
+                'description': f"Milestone completed at {cm.template.expected_age_months} months",
+                'evidence_url': evidence_url
+            })
+            
         # Sort by date descending
-        timeline.sort(key=lambda x: x['date'], reverse=True)
+        # Ensure dates are comparable (datetime vs date)
+        # Helper to convert date to datetime
+        import datetime
+        def normalize_date(d):
+             if isinstance(d, datetime.datetime):
+                 return d.date()
+             return d
+
+        timeline.sort(key=lambda x: normalize_date(x['date']), reverse=True)
 
         # 3. Get Gamified Milestones
         # Logic: 
@@ -175,7 +208,7 @@ class ChildTimelineView(APIView):
                 state = 'ACTIVE'
             
             milestones_data.append({
-                'id': t.id,
+                'id': cm.id,
                 'title': t.title,
                 'description': t.description,
                 'state': state,
@@ -211,7 +244,7 @@ class ChildTimelineView(APIView):
             'child': {
                 'id': child.id,
                 'name': child.first_name,
-                'age': f"{age_months} months",
+                'age': f"{age_months} months" if age_months < 24 else f"{age_months // 12} yrs {age_months % 12} mo",
                 'birth_date': child.date_of_birth,
                 'status': 'green' if not child.is_at_risk else 'red'
             },

@@ -46,6 +46,7 @@ class ChildMilestone(models.Model):
     template = models.ForeignKey(MilestoneTemplate, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     completion_date = models.DateField(null=True, blank=True)
+    evidence = models.FileField(upload_to='milestone_evidence/', null=True, blank=True)
     
     class Meta:
         unique_together = ('child', 'template')
