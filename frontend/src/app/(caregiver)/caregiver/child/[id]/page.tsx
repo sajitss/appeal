@@ -113,7 +113,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                     <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">My Journey</h2>
 
                     {/* Seasonal Scroll Container */}
-                    <div className="w-full overflow-x-auto rounded-2xl border bg-gray-50 shadow-inner">
+                    <div className="w-full overflow-x-auto overflow-y-hidden rounded-2xl border bg-gray-50 shadow-inner">
                         <div className="flex min-w-max">
                             {milestones.map((m: any, idx: number) => {
                                 // 1. Calculate Date & Season
