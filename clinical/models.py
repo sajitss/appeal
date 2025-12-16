@@ -48,9 +48,17 @@ class ChildMilestone(models.Model):
     completion_date = models.DateField(null=True, blank=True)
     evidence = models.FileField(upload_to='milestone_evidence/', null=True, blank=True)
     
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('SUBMITTED', 'Submitted'),
+        ('AI_REVIEWED', 'AI Reviewed'),
+        ('COMPLETED', 'Completed'),
+        ('REJECTED', 'Rejected'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+
     class Meta:
         unique_together = ('child', 'template')
 
     def __str__(self):
-        status = "DONE" if self.is_completed else "PENDING"
-        return f"{self.child.first_name} - {self.template.title}: {status}"
+        return f"{self.child.first_name} - {self.template.title}: {self.get_status_display()}"

@@ -154,7 +154,8 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                                         {/* Floating Card */}
                                         <div className={`w-full p-4 rounded-xl border flex flex-col items-center text-center relative z-10 transition-transform hover:-translate-y-1 ${m.state === 'WON' ? 'bg-white/90 border-yellow-200 shadow-sm' :
                                             m.state === 'ACTIVE' ? 'bg-white border-blue-400 shadow-lg ring-4 ring-blue-50 scale-105 cursor-pointer hover:bg-blue-50' :
-                                                'bg-white/40 border-gray-100 opacity-60 grayscale'
+                                                m.state === 'REVIEW' ? 'bg-amber-50 border-amber-300 shadow-md ring-2 ring-amber-100' :
+                                                    'bg-white/40 border-gray-100 opacity-60 grayscale'
                                             }`}
                                             onClick={() => {
                                                 if (m.state === 'ACTIVE') {
@@ -163,7 +164,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                                             }}
                                         >
                                             <div className="text-3xl mb-2">
-                                                {m.state === 'WON' ? '🏆' : m.state === 'LOCKED' ? '🔒' : '⭐'}
+                                                {m.state === 'WON' ? '🏆' : m.state === 'LOCKED' ? '🔒' : m.state === 'REVIEW' ? '⏳' : '⭐'}
                                             </div>
                                             <h3 className="font-bold text-sm text-gray-800 leading-tight mb-1">{m.title}</h3>
                                             <p className="text-[10px] text-gray-500">{m.expected_age}</p>
@@ -171,6 +172,11 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                                             {m.state === 'ACTIVE' && (
                                                 <span className="absolute -top-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm blink-animation">
                                                     Pending
+                                                </span>
+                                            )}
+                                            {m.state === 'REVIEW' && (
+                                                <span className="absolute -top-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                    In Review
                                                 </span>
                                             )}
                                         </div>

@@ -128,6 +128,8 @@ class ChildTimelineView(APIView):
         # Get encounters
         encounters = child.encounters.all().order_by('-encounter_date')
         timeline = []
+        
+        import datetime # Move import up
 
         # 1. Add "Registered" event
         timeline.append({
@@ -158,19 +160,39 @@ class ChildTimelineView(APIView):
             })
 
         # 3. Add Completed Milestones to Timeline
-        completed_milestones = child.milestones.filter(is_completed=True, completion_date__isnull=False)
-        for cm in completed_milestones:
+        # Include COMPLETED, SUBMITTED, and AI_REVIEWED
+        # Basically anything with Status != PENDING (or where evidence exists)
+        # Using status field now.
+        timeline_milestones = child.milestones.exclude(status='PENDING')
+        
+        for cm in timeline_milestones:
             evidence_url = None
             if cm.evidence:
                 evidence_url = request.build_absolute_uri(cm.evidence.url)
 
+            # Determine visual state based on status
+            if cm.status == 'COMPLETED':
+                title = f"Achieved: {cm.template.title}"
+                icon = '🏆'
+                desc = f"Milestone completed at {cm.template.expected_age_months} months"
+            elif cm.status == 'REJECTED':
+                title = f"Needs Retry: {cm.template.title}"
+                icon = '⚠️'
+                desc = "Video quality issues. Please try again."
+            else: # SUBMITTED or AI_REVIEWED
+                title = f"In Review: {cm.template.title}"
+                icon = '⏳'
+                state = 'AI Analyzing...' if cm.status == 'SUBMITTED' else 'Dr. Reviewing...'
+                desc = f"Status: {state}"
+
             timeline.append({
                 'type': 'milestone_won',
-                'title': f"Achieved: {cm.template.title}",
-                'date': cm.completion_date, 
-                'icon': '🏆',
-                'description': f"Milestone completed at {cm.template.expected_age_months} months",
-                'evidence_url': evidence_url
+                'title': title,
+                'date': cm.completion_date if cm.completion_date else datetime.date.today(), # Use today for pending reviews
+                'icon': icon,
+                'description': desc,
+                'evidence_url': evidence_url,
+                'status': cm.status
             })
             
         # Sort by date descending
@@ -202,8 +224,14 @@ class ChildTimelineView(APIView):
         for cm in child_milestones:
             t = cm.template
             state = 'LOCKED'
-            if cm.is_completed:
+            
+            # State Logic
+            if cm.status == 'COMPLETED':
                 state = 'WON'
+            elif cm.status in ['SUBMITTED', 'AI_REVIEWED']:
+                state = 'REVIEW'
+            elif cm.status == 'REJECTED':
+                state = 'ACTIVE' # Retry
             elif age_months >= t.expected_age_months:
                 state = 'ACTIVE'
             
