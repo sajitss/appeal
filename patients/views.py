@@ -5,6 +5,7 @@ from .serializers import CaregiverSerializer, ChildSerializer
 class CaregiverViewSet(viewsets.ModelViewSet):
     queryset = Caregiver.objects.all()
     serializer_class = CaregiverSerializer
+    permission_classes = [permissions.AllowAny]
 
 class ChildViewSet(viewsets.ModelViewSet):
     queryset = Child.objects.all()
