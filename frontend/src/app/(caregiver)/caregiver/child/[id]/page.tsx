@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import api from "@/lib/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
 
 interface TimelineEvent {
     id: number
@@ -18,6 +19,7 @@ interface TimelineEvent {
 }
 
 export default function ChildTimeline({ params }: { params: Promise<{ id: string }> }) {
+    const { t } = useTranslation()
     const { id } = use(params)
     const [child, setChild] = useState<any>(null)
     const [timeline, setTimeline] = useState<TimelineEvent[]>([])
@@ -25,7 +27,12 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
     const [pendingActions, setPendingActions] = useState<any[]>([])
     const [expandedActivity, setExpandedActivity] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
+    const [mounted, setMounted] = useState(false)
     const router = useRouter()
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const fetchTimeline = async () => {
         try {
@@ -49,15 +56,17 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
         try {
             await api.post(`/clinical/milestones/${milestoneId}/perform_human_review/`)
             fetchTimeline() // Refresh UI
-            alert("Milestone forcibly pushed to completion.")
+            alert(t('timeline.force_completion_alert') || "Milestone forcibly pushed to completion.")
         } catch (error) {
             console.error(error)
             alert("Failed to force completion.")
         }
     }
 
-    if (loading) return <div className="p-8 text-center text-[#4A8268]">Loading...</div>
-    if (!child) return <div className="p-8 text-center text-[#4A8268]">Child not found</div>
+    if (!mounted) return null // Prevent hydration mismatch
+
+    if (loading) return <div className="p-8 text-center text-[#4A8268]">{t('common.loading')}</div>
+    if (!child) return <div className="p-8 text-center text-[#4A8268]">{t('timeline.child_not_found')}</div>
 
     return (
         <div className="relative min-h-screen bg-[#FFFBF5] overflow-hidden flex flex-col font-sans selection:bg-[#4A8268] selection:text-white">
@@ -69,7 +78,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
             {/* Header */}
             <div className="bg-white/80 backdrop-blur-md border-b border-[#4A8268]/10 p-4 flex items-center gap-4 sticky top-0 z-20 shadow-sm">
                 <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-[#4A8268] hover:bg-[#4A8268]/10 hover:text-[#2C5F4B]">
-                    ←
+                    ← {t('common.back')}
                 </Button>
                 <div>
                     <h1 className="text-xl font-bold text-[#2C5F4B]">{child.name}</h1>
@@ -116,7 +125,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                 {/* Milestones Path */}
                 <div className="space-y-4">
                     <h2 className="text-xs font-semibold text-[#5D8B75] uppercase tracking-widest flex items-center gap-2">
-                        <span>🚀</span> My Journey
+                        <span>🚀</span> {t('timeline.my_journey')}
                     </h2>
 
                     {/* Seasonal Scroll Container */}
@@ -191,12 +200,12 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
 
                                             {m.state === 'ACTIVE' && (
                                                 <span className="absolute -top-3 bg-[#4A8268] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm blink-animation">
-                                                    Pending
+                                                    {t('timeline.pending_label')}
                                                 </span>
                                             )}
                                             {m.state === 'REVIEW' && (
                                                 <span className="absolute -top-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    In Review
+                                                    {t('timeline.in_review')}
                                                 </span>
                                             )}
                                         </div>
@@ -224,7 +233,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                 {/* Recent Activity */}
                 <div>
                     <h3 className="font-bold text-[#2C5F4B] mb-4 flex items-center gap-2">
-                        <span>📋</span> Recent Activity
+                        <span>📋</span> {t('timeline.recent_activity')}
                     </h3>
                     <div className="space-y-4">
                         {timeline.map((event, idx) => (
@@ -243,7 +252,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                                             <h4 className="font-bold text-[#2C5F4B]">{event.title}</h4>
                                             {event.evidence_url && (
                                                 <span className="text-xs text-[#2E8B99] font-medium px-2 py-1 bg-[#2E8B99]/10 rounded-full">
-                                                    {expandedActivity === idx ? 'Close' : 'View Video'}
+                                                    {expandedActivity === idx ? t('timeline.close') : t('timeline.view_video')}
                                                 </span>
                                             )}
                                         </div>
@@ -266,7 +275,7 @@ export default function ChildTimeline({ params }: { params: Promise<{ id: string
                                                             e.stopPropagation()
                                                             handleForceCompletion(event.id)
                                                         }}>
-                                                            Force Completion
+                                                            {t('timeline.force_completion')}
                                                         </Button>
                                                     </div>
                                                 )}

@@ -7,6 +7,8 @@ const api = axios.create({
     },
 });
 
+import i18n from '@/lib/i18n';
+
 // Add a request interceptor to attach the auth token if available
 api.interceptors.request.use(
     (config) => {
@@ -16,6 +18,8 @@ api.interceptors.request.use(
             if (token) {
                 config.headers.Authorization = `Token ${token}`;
             }
+            // Add Language Header for Backend Localization
+            config.headers['Accept-Language'] = i18n.language || 'en';
         }
         return config;
     },

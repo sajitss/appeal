@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
 
 export default function ProfilePage() {
+    const { t, i18n } = useTranslation()
     const router = useRouter()
     const [caregiver, setCaregiver] = useState<any>(null)
     const [firstName, setFirstName] = useState("")
@@ -17,6 +19,11 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -27,13 +34,15 @@ export default function ProfilePage() {
             }
 
             try {
-                // Assuming we can fetch by ID directly
                 const response = await api.get(`/patients/caregivers/${id}/`)
                 const data = response.data
                 setCaregiver(data)
                 setFirstName(data.first_name)
                 setLastName(data.last_name)
                 setPhone(data.phone_number)
+                if (data.language_preference) {
+                    i18n.changeLanguage(data.language_preference.toLowerCase())
+                }
             } catch (error: any) {
                 console.error("Failed to load profile", error)
                 const detail = error.response?.data?.detail || error.message || "Unknown error"
@@ -43,6 +52,7 @@ export default function ProfilePage() {
             }
         }
         fetchProfile()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router])
 
     const handleSave = async (e: React.FormEvent) => {
@@ -56,7 +66,8 @@ export default function ProfilePage() {
             await api.patch(`/patients/caregivers/${caregiver.id}/`, {
                 first_name: firstName,
                 last_name: lastName,
-                phone_number: phone
+                phone_number: phone,
+                language_preference: i18n.language.toUpperCase()
             })
             // Update local storage name if changed
             localStorage.setItem("caregiver_name", `${firstName} ${lastName}`)
@@ -69,7 +80,13 @@ export default function ProfilePage() {
         }
     }
 
-    if (loading) return <div className="p-8 text-center text-[#4A8268]">Loading...</div>
+    const changeLanguage = (lang: string) => {
+        i18n.changeLanguage(lang)
+    }
+
+    if (!mounted) return null // Prevent hydration mismatch
+
+    if (loading) return <div className="p-8 text-center text-[#4A8268]">{t('common.loading')}</div>
 
     return (
         <div className="relative min-h-screen bg-[#FFFBF5] overflow-hidden flex flex-col p-4 font-sans selection:bg-[#4A8268] selection:text-white">
@@ -81,9 +98,9 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="relative z-10 flex items-center gap-4 mb-8 pt-4">
                 <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-[#4A8268] hover:bg-[#4A8268]/10 hover:text-[#2C5F4B]">
-                    ← Back
+                    ← {t('common.back')}
                 </Button>
-                <h1 className="text-2xl font-bold text-[#2C5F4B]">My Profile</h1>
+                <h1 className="text-2xl font-bold text-[#2C5F4B]">{t('profile.title')}</h1>
             </div>
 
             <Card className="z-10 bg-white/80 backdrop-blur-md border border-white/50 shadow-xl ring-1 ring-[#4A8268]/5 max-w-md w-full mx-auto">
@@ -92,13 +109,44 @@ export default function ProfilePage() {
                         <div className="w-20 h-20 bg-[#FFFBF5] rounded-full flex items-center justify-center text-4xl mx-auto mb-2 border border-[#4A8268]/10 shadow-inner ring-4 ring-white">
                             👤
                         </div>
-                        <CardTitle className="text-[#2C5F4B] text-xl">Edit Details</CardTitle>
+                        <CardTitle className="text-[#2C5F4B] text-xl">{t('profile.edit_details')}</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-5 pt-2">
 
+                        {/* Language Selector */}
+                        <div className="flex flex-col space-y-2">
+                            <Label className="text-[#5D8B75] font-medium">App Language / भाषा</Label>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant={i18n.language === 'en' ? 'default' : 'outline'}
+                                    className={i18n.language === 'en' ? 'bg-[#4A8268] hover:bg-[#3D6E57]' : 'border-[#4A8268]/20 text-[#4A8268]'}
+                                    onClick={() => changeLanguage('en')}
+                                >
+                                    English
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={i18n.language === 'hi' ? 'default' : 'outline'}
+                                    className={i18n.language === 'hi' ? 'bg-[#4A8268] hover:bg-[#3D6E57]' : 'border-[#4A8268]/20 text-[#4A8268]'}
+                                    onClick={() => changeLanguage('hi')}
+                                >
+                                    हिंदी (Hindi)
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={i18n.language === 'kn' ? 'default' : 'outline'}
+                                    className={i18n.language === 'kn' ? 'bg-[#4A8268] hover:bg-[#3D6E57]' : 'border-[#4A8268]/20 text-[#4A8268]'}
+                                    onClick={() => changeLanguage('kn')}
+                                >
+                                    ಕನ್ನಡ (Kannada)
+                                </Button>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col space-y-2">
-                                <Label htmlFor="firstName" className="text-[#5D8B75] font-medium">First Name</Label>
+                                <Label htmlFor="firstName" className="text-[#5D8B75] font-medium">{t('profile.first_name')}</Label>
                                 <Input
                                     id="firstName"
                                     value={firstName}
@@ -108,7 +156,7 @@ export default function ProfilePage() {
                                 />
                             </div>
                             <div className="flex flex-col space-y-2">
-                                <Label htmlFor="lastName" className="text-[#5D8B75] font-medium">Last Name</Label>
+                                <Label htmlFor="lastName" className="text-[#5D8B75] font-medium">{t('profile.last_name')}</Label>
                                 <Input
                                     id="lastName"
                                     value={lastName}
@@ -120,7 +168,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-col space-y-2">
-                            <Label htmlFor="phone" className="text-[#5D8B75] font-medium">Mobile Number</Label>
+                            <Label htmlFor="phone" className="text-[#5D8B75] font-medium">{t('profile.mobile')}</Label>
                             <Input
                                 id="phone"
                                 value={phone}
@@ -133,7 +181,7 @@ export default function ProfilePage() {
 
                         {/* Read Only Info */}
                         <div className="p-3 bg-[#4A8268]/5 rounded-lg border border-[#4A8268]/10">
-                            <p className="text-xs text-[#5D8B75] uppercase tracking-wider font-bold mb-1">Account Role</p>
+                            <p className="text-xs text-[#5D8B75] uppercase tracking-wider font-bold mb-1">{t('profile.role')}</p>
                             <p className="text-[#2C5F4B] font-medium">{caregiver?.relationship || 'Guardian'}</p>
                         </div>
 
@@ -150,7 +198,7 @@ export default function ProfilePage() {
                             className="w-full h-12 text-lg font-medium bg-gradient-to-r from-[#4A8268] to-[#2E8B99] hover:from-[#3D6E57] hover:to-[#257A88] text-white border-0 shadow-lg shadow-[#4A8268]/20 rounded-xl transition-all hover:-translate-y-0.5"
                             disabled={saving}
                         >
-                            {saving ? "Saving..." : "Save Changes"}
+                            {saving ? t('profile.saving') : t('profile.save')}
                         </Button>
                     </CardFooter>
                 </form>

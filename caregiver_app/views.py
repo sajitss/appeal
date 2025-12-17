@@ -64,6 +64,24 @@ class CaregiverDashboardView(APIView):
         except Caregiver.DoesNotExist:
              return Response({'error': 'Caregiver not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Helper for static strings (manual translation)
+        from django.utils.translation import get_language
+        lang = get_language()
+        is_hindi = lang and lang.startswith('hi')
+        is_kannada = lang and lang.startswith('kn')
+
+        strings = {
+            'months': "ತಿಂಗಳುಗಳು" if is_kannada else ("महीने" if is_hindi else "months"),
+            'years': "ವರ್ಷಗಳು" if is_kannada else ("साल" if is_hindi else "years"),
+            'yrs': "ವರ್ಷ" if is_kannada else ("साल" if is_hindi else "yrs"),
+            'mo': "ತಿಂಗಳು" if is_kannada else ("महीने" if is_hindi else "mo"),
+            'tasks_pending': "ಕಾರ್ಯಗಳು ಬಾಕಿ ಇವೆ" if is_kannada else ("कार्य लंबित" if is_hindi else "tasks pending"),
+            'in_review': "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ" if is_kannada else ("समीक्षा में" if is_hindi else "In Review"),
+            'none_pending': "ಯಾವುದೂ ಬಾಕಿ ಇಲ್ಲ" if is_kannada else ("कोई लंबित नहीं" if is_hindi else "None pending"),
+            'doctor_review': "ವೈದ್ಯರ ಪರಿಶೀಲನೆ ನಡೆಯುತ್ತಿದೆ" if is_kannada else ("डॉक्टर समीक्षा जारी" if is_hindi else "Doctor review ongoing"),
+            'hello': "ನಮಸ್ಕಾರ" if is_kannada else ("नमस्ते" if is_hindi else "Hello"),
+        }
+
         children = caregiver.children.all()
         data = []
         for child in children:
@@ -91,29 +109,29 @@ class CaregiverDashboardView(APIView):
 
             if child.is_at_risk:
                 status = 'red'
-                status_text = 'Doctor review ongoing'
+                status_text = strings['doctor_review']
             elif actionable_count > 0:
                  status = 'amber'
-                 status_text = f'{actionable_count} tasks pending'
+                 status_text = f'{actionable_count} {strings["tasks_pending"]}'
             elif review_count > 0:
-                 status = 'blue' # Or some other indicator, maybe just amber for now or a new color
-                 status_text = 'In Review'
+                 status = 'blue' 
+                 status_text = strings['in_review']
             else:
                  status = 'green'
-                 status_text = 'None pending'
+                 status_text = strings['none_pending']
             
             # Calculate age logic
             # < 24 months -> X months
             # >= 24 months -> Y years
             if age_months < 24:
-                age_str = f"{age_months} months"
+                age_str = f"{age_months} {strings['months']}"
             else:
                 years = age_months // 12
                 remainder_months = age_months % 12
                 if remainder_months > 0:
-                    age_str = f"{years} yrs {remainder_months} mo"
+                    age_str = f"{years} {strings['yrs']} {remainder_months} {strings['mo']}"
                 else:
-                    age_str = f"{years} years"
+                    age_str = f"{years} {strings['years']}"
 
             data.append({
                 'id': child.id,
@@ -124,7 +142,7 @@ class CaregiverDashboardView(APIView):
                 'avatar_url': '' # Placeholder
             })
 
-        return Response({'children': data, 'greeting': f"Hello, {caregiver.first_name}"})
+        return Response({'children': data, 'greeting': f"{strings['hello']}, {caregiver.first_name}"})
 
 class ChildTimelineView(APIView):
     """
@@ -144,25 +162,55 @@ class ChildTimelineView(APIView):
         
         import datetime # Move import up
 
+        # Helper for static strings (since we can't compile .mo files easily in this env)
+        from django.utils.translation import get_language
+        lang = get_language()
+        
+        is_hindi = lang and lang.startswith('hi')
+        is_kannada = lang and lang.startswith('kn')
+        
+        strings = {
+            'joined': "APPEAL ಸೇರಿದರು" if is_kannada else ("APPEAL में शामिल हुए" if is_hindi else "Joined APPEAL"),
+            'reg_complete': "ನೋಂದಣಿ ಪೂರ್ಣಗೊಂಡಿದೆ" if is_kannada else ("सत्यापन पूर्ण" if is_hindi else "Registration complete"),
+            'checkup': "ತಪಾಸಣೆ" if is_kannada else ("जांच" if is_hindi else "Check-up"),
+            'home_visit': "ಮನೆ ಭೇಟಿ" if is_kannada else ("गृह भेंट" if is_hindi else "Home Visit"),
+            'checks_performed': "ತಪಾಸಣೆ ಮಾಡಲಾಗಿದೆ" if is_kannada else ("जांच की गई" if is_hindi else "checks performed"),
+            'achieved': "ಸಾಧಿಸಲಾಗಿದೆ: " if is_kannada else ("प्राप्त किया: " if is_hindi else "Achieved: "),
+            'milestone_comp': "ಮೈಲಿಗಲ್ಲು ಪೂರ್ಣಗೊಂಡಿದೆ" if is_kannada else ("महीने में मील का पत्थर पूरा हुआ" if is_hindi else "Milestone completed at"),
+            'months': "ತಿಂಗಳುಗಳು" if is_kannada else ("महीने" if is_hindi else "months"),
+            'needs_retry': "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ: " if is_kannada else ("पुनः प्रयास करें: " if is_hindi else "Needs Retry: "),
+            'retry_desc': "ವೀಡಿಯೊ ಗುಣಮಟ್ಟದ ಸಮಸ್ಯೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ." if is_kannada else ("वीडियो की गुणवत्ता में समस्या। कृपया पुन: प्रयास करें।" if is_hindi else "Video quality issues. Please try again."),
+            'in_review': "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ: " if is_kannada else ("समीक्षा में: " if is_hindi else "In Review: "),
+            'ai_analyzing': "AI ವಿಶ್ಲೇಷಿಸುತ್ತಿದೆ..." if is_kannada else ("एआई विश्लेषण कर रहा है..." if is_hindi else "AI Analyzing..."),
+            'dr_reviewing': "ವೈದ್ಯರು ಪರಿಶೀಲಿಸುತ್ತಿದ್ದಾರೆ..." if is_kannada else ("डॉक्टर समीक्षा कर रहे हैं..." if is_hindi else "Dr. Reviewing..."),
+            'verify': "ಪರಿಶೀಲಿಸಿ" if is_kannada else ("सत्यापित करें" if is_hindi else "Verify"),
+            'is_child': "ಏನು" if is_kannada else ("क्या" if is_hindi else "Check if"),
+            'action_desc': "ಹಾಗೆ ವರ್ತಿಸುತ್ತಿದೆಯೇ? AI ವಿಶ್ಲೇಷಣೆಗಾಗಿ ವೀಡಿಯೊ ರೆಕಾರ್ಡ್ ಮಾಡಿ." if is_kannada else ("जैसा व्यवहार कर रहा है? एआई विश्लेषण के लिए एक वीडियो रिकॉर्ड करें।" if is_hindi else ". Record a video for AI analysis."),
+            'caught_up': "ಎಲ್ಲವೂ ಮುಗಿದಿದೆ!" if is_kannada else ("सब ठीक है!" if is_hindi else "All Caught Up!"),
+            'doing_great': "ಅತ್ಯುತ್ತಮವಾಗಿದೆ. ಯಾವುದೇ ಬಾಕಿ ಇಲ್ಲ." if is_kannada else ("बहुत अच्छा कर रहा है। कोई लंबित कार्य नहीं।" if is_hindi else "is doing great. No pending actions."),
+            'view_history': "ಇತಿಹಾಸ ವೀಕ್ಷಿಸಿ" if is_kannada else ("इतिहास देखें" if is_hindi else "View History"),
+            'start_recording': "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಿ" if is_kannada else ("रिकॉर्डिंग शुरू करें" if is_hindi else "Start Recording"),
+        }
+
         # 1. Add "Registered" event
         timeline.append({
             'type': 'milestone',
-            'title': 'Joined APPEAL',
+            'title': strings['joined'],
             'date': child.enrollment_date,
             'icon': '👋',
-            'description': 'Registration complete'
+            'description': strings['reg_complete']
         })
 
         # 2. Add Encounters
         for enc in encounters:
-            title = "Check-up"
+            title = strings['checkup']
             icon = "👩‍⚕️"
             if enc.encounter_type == 'HOME_VISIT':
-                title = "Home Visit"
+                title = strings['home_visit']
             
             # Check for screening results to add detail
             results_count = enc.screenings.count()
-            desc = f"{results_count} checks performed"
+            desc = f"{results_count} {strings['checks_performed']}"
 
             timeline.append({
                 'type': 'encounter',
@@ -185,17 +233,17 @@ class ChildTimelineView(APIView):
 
             # Determine visual state based on status
             if cm.status == 'COMPLETED':
-                title = f"Achieved: {cm.template.title}"
+                title = f"{strings['achieved']}{cm.template.title}"
                 icon = '🏆'
-                desc = f"Milestone completed at {cm.template.expected_age_months} months"
+                desc = f"{strings['milestone_comp']} {cm.template.expected_age_months} {strings['months']}" if (is_hindi or is_kannada) else f"Milestone completed at {cm.template.expected_age_months} months"
             elif cm.status == 'REJECTED':
-                title = f"Needs Retry: {cm.template.title}"
+                title = f"{strings['needs_retry']}{cm.template.title}"
                 icon = '⚠️'
-                desc = "Video quality issues. Please try again."
+                desc = strings['retry_desc']
             else: # SUBMITTED or AI_REVIEWED
-                title = f"In Review: {cm.template.title}"
+                title = f"{strings['in_review']}{cm.template.title}"
                 icon = '⏳'
-                state = 'AI Analyzing...' if cm.status == 'SUBMITTED' else 'Dr. Reviewing...'
+                state = strings['ai_analyzing'] if cm.status == 'SUBMITTED' else strings['dr_reviewing']
                 desc = f"Status: {state}"
 
             timeline.append({
@@ -210,7 +258,7 @@ class ChildTimelineView(APIView):
             })
             
         # Sort by date descending
-        # Ensure dates are comparable (datetime vs date)
+        # ... (Sorting logic remains same) ...
         # Helper to convert date to datetime
         import datetime
         def normalize_date(d):
@@ -221,10 +269,7 @@ class ChildTimelineView(APIView):
         timeline.sort(key=lambda x: normalize_date(x['date']), reverse=True)
 
         # 3. Get Gamified Milestones
-        # Logic: 
-        # - Won: is_completed = True
-        # - Active: is_completed = False, but age >= expected_age
-        # - Locked: age < expected_age
+        # ... (Logic remains same) ...
         
         # Calculate child age in months (approx)
         import datetime
@@ -254,7 +299,7 @@ class ChildTimelineView(APIView):
                 'title': t.title,
                 'description': t.description,
                 'state': state,
-                'expected_age': f"{t.expected_age_months} months"
+                'expected_age': f"{t.expected_age_months} {strings['months']}"
             })
 
 
@@ -266,27 +311,30 @@ class ChildTimelineView(APIView):
         
         if active_milestones:
             for active in active_milestones:
+                # Construct description carefully
+                desc_text = f"{strings['is_child']} {child.first_name} {active['description'].lower() if not (is_hindi or is_kannada) else active['description']} {strings['action_desc']}"
+                
                 pending_actions.append({
                     'type': 'video',
-                    'title': f"Verify '{active['title']}'",
-                    'description': f"Is {child.first_name} {active['description'].lower()}? Record a video for AI analysis.",
-                    'action_label': 'Start Recording',
+                    'title': f"{strings['verify']} '{active['title']}'",
+                    'description': desc_text,
+                    'action_label': strings['start_recording'],
                     'milestone_id': active['id']
                 })
         else:
             # Fallback if no active milestones
             pending_actions.append({
                 'type': 'generic',
-                'title': 'All Caught Up!',
-                'description': f"{child.first_name} is doing great. No pending actions.",
-                'action_label': 'View History'
+                'title': strings['caught_up'],
+                'description': f"{child.first_name} {strings['doing_great']}",
+                'action_label': strings['view_history']
             })
 
         return Response({
             'child': {
                 'id': child.id,
                 'name': child.first_name,
-                'age': f"{age_months} months" if age_months < 24 else f"{age_months // 12} yrs {age_months % 12} mo",
+                'age': f"{age_months} {strings['months']}" if age_months < 24 else f"{age_months // 12} yrs {age_months % 12} mo",
                 'birth_date': child.date_of_birth,
                 'status': 'green' if not child.is_at_risk else 'red'
             },

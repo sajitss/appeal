@@ -1,0 +1,60 @@
+{
+    "common": {
+        "loading": "लोड हो रहा है...",
+        "child_not_found": "बच्चा नहीं मिला",
+        "home": "होम",
+        "profile": "प्रोफ़ाइल",
+        "logout": "लॉग आउट",
+        "back": "पीछे"
+    },
+    "login": {
+        "welcome": "स्वागत है",
+        "subtitle": "बच्चों के विकास में आपका साथी",
+        "mobile_label": "मोबाइल नंबर",
+        "mobile_placeholder": "१० अंकों का नंबर दर्ज करें",
+        "password_label": "पासवर्ड",
+        "password_placeholder": "पासवर्ड दर्ज करें",
+        "button": "डैशबोर्ड पर जाएं",
+        "footer": "अभिभावकों का सशक्तिकरण, उज्ज्वल भविष्य"
+    },
+    "dashboard": {
+        "greeting": "नमस्ते, {{name}}",
+        "my_children": "मेरे बच्चे",
+        "pending_tasks_one": "{{count}} कार्य बाकी",
+        "pending_tasks_other": "{{count}} कार्य बाकी",
+        "no_children": "अभी तक कोई बच्चे नहीं जुड़े हैं",
+        "no_children_sub": "विकास यात्रा शुरू करने के लिए अपने पहले बच्चे को जोड़ें!",
+        "add_child": "बच्चे को जोड़ें"
+    },
+    "timeline": {
+        "my_journey": "मेरी यात्रा",
+        "recent_activity": "हाल की गतिविधि",
+        "pending_label": "लंबित",
+        "in_review": "समीक्षा में",
+        "view_video": "वीडियो देखें",
+        "close": "बंद करें",
+        "force_completion": "पूर्ण करें"
+    },
+    "add_child": {
+        "title": "बच्चे को जोड़ें",
+        "new_profile": "नई प्रोफ़ाइल",
+        "first_name": "पहला नाम",
+        "last_name": "अंतिम नाम",
+        "dob": "जन्म तिथि",
+        "sex": "लिंग",
+        "male": "पुरुष",
+        "female": "महिला",
+        "button_add": "बच्चे को जोड़ें",
+        "button_adding": "जोड़ा जा रहा है..."
+    },
+    "profile": {
+        "title": "मेरी प्रोफ़ाइल",
+        "edit_details": "विवरण संपादित करें",
+        "first_name": "पहला नाम",
+        "last_name": "अंतिम नाम",
+        "mobile": "मोबाइल नंबर",
+        "role": "खाता भूमिका",
+        "save": "परिवर्तन सहेजें",
+        "saving": "सहेजा जा रहा है..."
+    }
+}

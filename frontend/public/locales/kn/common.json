@@ -1,0 +1,46 @@
+{
+    "common": {
+        "loading": "ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+        "back": "ಹಿಂದೆ"
+    },
+    "login": {
+        "welcome": "ಮತ್ತೆ ಸುಸ್ವಾಗತ",
+        "mobile_label": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+        "mobile_placeholder": "ನಿಮ್ಮ 10 ಅಂಕಿಯ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+        "pid_label": "ಪಾಸ್‌ವರ್ಡ್",
+        "pid_placeholder": "ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ನಮೂದಿಸಿ",
+        "submit": "ನನ್ನ ಮಗುವನ್ನು ನೋಡಿ"
+    },
+    "dashboard": {
+        "greeting": "ನಮಸ್ಕಾರ",
+        "add_child": "ಮಗುವನ್ನು ಸೇರಿಸಿ",
+        "my_children": "ನನ್ನ ಮಕ್ಕಳು",
+        "start_journey": "ನಿಮ್ಮ ಮಗುವನ್ನು ಸೇರಿಸುವ ಮೂಲಕ ನಿಮ್ಮ ಪ್ರಯಾಣವನ್ನು ಪ್ರಾರಂಭಿಸಿ"
+    },
+    "profile": {
+        "title": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್",
+        "personal_details": "ವೈಯಕ್ತಿಕ ವಿವರಗಳು",
+        "name_label": "ಪೋಷಕರ ಹೆಸರು",
+        "phone_label": "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+        "language_preference": "ಭಾಷಾ ಆದ್ಯತೆ",
+        "save_changes": "ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ",
+        "saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
+        "success_message": "ಪ್ರೊಫೈಲ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!"
+    },
+    "timeline": {
+        "child_not_found": "ಮಗು ಕಂಡುಬಂದಿಲ್ಲ",
+        "my_journey": "ನನ್ನ ಪ್ರಯಾಣ",
+        "recent_activity": "ಇತ್ತೀಚಿನ ಚಟುವಟಿಕೆ",
+        "view_video": "ವೀಡಿಯೊ ವೀಕ್ಷಿಸಿ",
+        "close": "ಮುಚ್ಚಿ",
+        "force_completion": "ಪೂರ್ಣಗೊಳಿಸುವಿಕೆಯನ್ನು ಒತ್ತಾಯಿಸಿ",
+        "force_completion_alert": "ಮೈಲಿಗಲ್ಲು ಬಲವಂತವಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ.",
+        "pending_label": "ಬಾಕಿ ಉಳಿದಿದೆ",
+        "in_review": "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ"
+    },
+    "nav": {
+        "home": "ಮುಖಪುಟ",
+        "profile": "ಪ್ರೊಫೈಲ್",
+        "logout": "ಲಾಗ್ ಔಟ್"
+    }
+}

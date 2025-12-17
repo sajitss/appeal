@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation', # Must be before admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,10 +52,26 @@ INSTALLED_APPS = [
     'caregiver_app',
 ]
 
+# ... Middleware ...
+
+# Internationalization
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+LANGUAGES = (
+    ('en', 'English'),
+    ('hi', 'Hindi'),
+    ('kn', 'Kannada'),
+)
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Ensure this is first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware', # Enable Locale
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

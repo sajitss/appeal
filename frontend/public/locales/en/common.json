@@ -1,0 +1,60 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "child_not_found": "Child not found",
+        "home": "Home",
+        "profile": "Profile",
+        "logout": "Logout",
+        "back": "Back"
+    },
+    "login": {
+        "welcome": "Welcome Back",
+        "subtitle": "Your Partner in Child Growth",
+        "mobile_label": "Mobile Number",
+        "mobile_placeholder": "Enter 10-digit number",
+        "password_label": "Password",
+        "password_placeholder": "Enter password",
+        "button": "Access Dashboard",
+        "footer": "Empowering Parents, Nurturing Futures"
+    },
+    "dashboard": {
+        "greeting": "Hello, {{name}}",
+        "my_children": "My Children",
+        "pending_tasks_one": "{{count}} task pending",
+        "pending_tasks_other": "{{count}} tasks pending",
+        "no_children": "No children linked yet",
+        "no_children_sub": "Add your first child to start tracking their growth journey!",
+        "add_child": "Add Child"
+    },
+    "timeline": {
+        "my_journey": "My Journey",
+        "recent_activity": "Recent Activity",
+        "pending_label": "Pending",
+        "in_review": "In Review",
+        "view_video": "View Video",
+        "close": "Close",
+        "force_completion": "Force Completion"
+    },
+    "add_child": {
+        "title": "Add Child",
+        "new_profile": "New Profile",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "dob": "Date of Birth",
+        "sex": "Sex",
+        "male": "Male",
+        "female": "Female",
+        "button_add": "Add Child",
+        "button_adding": "Adding..."
+    },
+    "profile": {
+        "title": "My Profile",
+        "edit_details": "Edit Details",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "mobile": "Mobile Number",
+        "role": "Account Role",
+        "save": "Save Changes",
+        "saving": "Saving..."
+    }
+}

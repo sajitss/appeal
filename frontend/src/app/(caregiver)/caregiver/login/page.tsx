@@ -1,18 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
 
 export default function CaregiverLoginPage() {
+    const { t } = useTranslation()
     const [phoneNumber, setPhoneNumber] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const router = useRouter()
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) return null
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -47,21 +56,21 @@ export default function CaregiverLoginPage() {
                     🌱
                 </div>
                 <h1 className="text-3xl font-bold text-[#2C5F4B] tracking-tight">APPEAL For Parents</h1>
-                <p className="text-[#5D8B75] mt-2">Nurturing your child's health journey</p>
+                <p className="text-[#5D8B75] mt-2">{t('login.subtitle')}</p>
             </div>
 
             <Card className="w-full max-w-sm border-0 shadow-xl bg-white/80 backdrop-blur-md ring-1 ring-white/50 z-10">
                 <CardHeader className="pb-2 text-center">
-                    <CardTitle className="text-xl text-gray-800">Welcome Back</CardTitle>
+                    <CardTitle className="text-xl text-gray-800">{t('login.welcome')}</CardTitle>
                     <CardDescription className="text-gray-500">Let's check in on your little one's progress.</CardDescription>
                 </CardHeader>
                 <form onSubmit={handleLogin}>
                     <CardContent className="space-y-5 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-gray-700 font-medium">Mobile Number</Label>
+                            <Label htmlFor="phone" className="text-gray-700 font-medium">{t('login.mobile_label')}</Label>
                             <Input
                                 id="phone"
-                                placeholder="98765 43210"
+                                placeholder={t('login.mobile_placeholder')}
                                 value={phoneNumber}
                                 onChange={(e) => setPhoneNumber(e.target.value)}
                                 type="tel"
@@ -70,10 +79,10 @@ export default function CaregiverLoginPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                            <Label htmlFor="password" className="text-gray-700 font-medium">{t('login.password_label')}</Label>
                             <Input
                                 id="password"
-                                placeholder="••••••"
+                                placeholder={t('login.password_placeholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 type="password"
@@ -90,14 +99,14 @@ export default function CaregiverLoginPage() {
                     </CardContent>
                     <CardFooter className="pt-2 pb-6">
                         <Button type="submit" className="w-full h-12 text-lg font-medium bg-gradient-to-r from-[#4A8268] to-[#2E8B99] hover:from-[#3D6E57] hover:to-[#257A88] text-white border-0 shadow-lg shadow-[#4A8268]/20 rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0">
-                            See My Child
+                            {t('login.button')}
                         </Button>
                     </CardFooter>
                 </form>
             </Card>
 
             <p className="text-xs text-[#5D8B75]/80 mt-8 text-center max-w-xs z-10 font-medium">
-                Your privacy is important to us. <br /> Records are securely shared with your doctor.
+                {t('login.footer')}
             </p>
         </div>
     )
