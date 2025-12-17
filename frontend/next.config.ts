@@ -1,11 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8000/api/:path*',
+        destination: `${process.env.INTERNAL_API_URL || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8000' : 'http://backend:8000')}/api/:path*`,
       },
     ]
   },

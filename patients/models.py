@@ -1,13 +1,25 @@
 from django.db import models
 import uuid
 
+class Family(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
 class Caregiver(models.Model):
     RELATIONSHIP_CHOICES = (
         ('MOTHER', 'Mother'),
         ('FATHER', 'Father'),
         ('GUARDIAN', 'Guardian'),
+        ('GRANDFATHER', 'Grandfather'),
+        ('GRANDMOTHER', 'Grandmother'),
+        ('OTHER', 'Other'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='members', null=True, blank=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15, blank=True)
@@ -29,6 +41,7 @@ class Child(models.Model):
     # Using 'caregiver' instead of 'guardian' for clarity, though keeping related_name might be safe or we can update it.
     # Let's update the field name to 'caregiver' to match the model rename.
     caregiver = models.ForeignKey(Caregiver, on_delete=models.CASCADE, related_name='children', null=True)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='children', null=True, blank=True)
     unique_child_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

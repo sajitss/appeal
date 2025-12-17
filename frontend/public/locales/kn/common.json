@@ -25,7 +25,13 @@
         "language_preference": "ಭಾಷಾ ಆದ್ಯತೆ",
         "save_changes": "ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ",
         "saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
-        "success_message": "ಪ್ರೊಫೈಲ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!"
+        "success_message": "ಪ್ರೊಫೈಲ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!",
+        "family_title": "ನನ್ನ ಕುಟುಂಬ",
+        "add_member": "ಸದಸ್ಯರನ್ನು ಸೇರಿಸಿ",
+        "invite_title": "ಕುಟುಂಬದ ಸದಸ್ಯರನ್ನು ಆಹ್ವಾನಿಸಿ",
+        "relationship": "ಸಂಬಂಧ",
+        "login_credential_notice": "ಲಾಗಿನ್ ರುಜುವಾತುಗಳು: ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ 'appeal'",
+        "invite_btn": "ಆಹ್ವಾನಿಸಿ"
     },
     "timeline": {
         "child_not_found": "ಮಗು ಕಂಡುಬಂದಿಲ್ಲ",

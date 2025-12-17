@@ -14,45 +14,61 @@ class CaregiverLoginView(APIView):
     In a real app, this would use OTP. For prototype, direct match is used.
     """
     permission_classes = [permissions.AllowAny]
+    authentication_classes = [] # Bypass Session/CSRF checks for login
 
     def post(self, request):
-        phone = request.data.get('phone_number')
-        password = request.data.get('password')
+        try:
+            print(f"DEBUG: Login Attempt. Data: {request.data}") # Debug Log
 
-        if not phone or not password:
-             return Response({'error': 'Please provide mobile number and password'}, status=status.HTTP_400_BAD_REQUEST)
+            raw_phone = request.data.get('phone_number', '')
+            # Sanitize Phone: Keep only digits
+            phone = ''.join(filter(str.isdigit, str(raw_phone)))
+            
+            password = request.data.get('password', '').strip()
 
-        # 1. Hardcoded Password Check
-        if password != 'appeal':
-             return Response({'error': 'Invalid password'}, status=status.HTTP_401_UNAUTHORIZED)
+            print(f"DEBUG: Sanitized Phone: '{phone}', Password: '{password}'")
 
-        # 2. Find or Create Caregiver
-        caregiver, created = Caregiver.objects.get_or_create(
-            phone_number=phone,
-            defaults={
-                'first_name': 'Parent', 
-                'last_name': '',
-                'relationship': 'GUARDIAN'
-            }
-        )
+            if not phone or not password:
+                 return Response({'error': 'Please provide mobile number and password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 3. Find Primary Child (if any)
-        # Just pick the first one for now
-        child = caregiver.children.first()
-        primary_child_id = child.id if child else None
-        
-        return Response({
-            'message': 'Login successful',
-            'caregiver_id': caregiver.id,
-            'caregiver_name': f"{caregiver.first_name} {caregiver.last_name}",
-            'primary_child_id': primary_child_id 
-        })
+            # 1. Hardcoded Password Check (Case Insensitive)
+            if password.lower() != 'appeal':
+                 print("DEBUG: Password mismatch")
+                 return Response({'error': 'Invalid password'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            print("DEBUG: Password OK. Checking DB...")
+
+            # 2. Find or Create Caregiver
+            caregiver, created = Caregiver.objects.get_or_create(
+                phone_number=phone,
+                defaults={
+                    'first_name': 'Parent', 
+                    'last_name': '',
+                    'relationship': 'GUARDIAN'
+                }
+            )
+
+            # 3. Find Primary Child (if any)
+            # Just pick the first one for now
+            child = caregiver.children.first()
+            primary_child_id = child.id if child else None
+            
+            return Response({
+                'message': 'Login successful',
+                'caregiver_id': caregiver.id,
+                'caregiver_name': f"{caregiver.first_name} {caregiver.last_name}",
+                'primary_child_id': primary_child_id 
+            })
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': f"Server Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CaregiverDashboardView(APIView):
     """
-    Returns list of children for a specific caregiver.
+    Returns list of children for a specific caregiver's FAMILY.
     """
-    permission_classes = [permissions.AllowAny] # We rely on caregiver_id passed in query/body for prototype simplicity
+    permission_classes = [permissions.AllowAny] 
 
     def get(self, request):
         caregiver_id = request.query_params.get('caregiver_id')
@@ -82,7 +98,13 @@ class CaregiverDashboardView(APIView):
             'hello': "ನಮಸ್ಕಾರ" if is_kannada else ("नमस्ते" if is_hindi else "Hello"),
         }
 
-        children = caregiver.children.all()
+        # FETCH CHILDREN FROM FAMILY
+        if caregiver.family:
+            children = Child.objects.filter(family=caregiver.family)
+        else:
+             # Fallback for legacy/unmigrated data
+            children = caregiver.children.all()
+
         data = []
         for child in children:
             # Calculate simple status
@@ -143,6 +165,55 @@ class CaregiverDashboardView(APIView):
             })
 
         return Response({'children': data, 'greeting': f"{strings['hello']}, {caregiver.first_name}"})
+
+class AddFamilyMemberView(APIView):
+    """
+    Adds a new member to the caregiver's family.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        inviter_id = request.data.get('caregiver_id')
+        new_phone = request.data.get('phone_number')
+        new_name = request.data.get('first_name', 'Family Member')
+        relationship = request.data.get('relationship', 'GUARDIAN')
+
+        if not inviter_id or not new_phone:
+            return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            inviter = Caregiver.objects.get(id=inviter_id)
+        except Caregiver.DoesNotExist:
+            return Response({'error': 'Inviter not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not inviter.family:
+            # Should not happen if migration ran, but handle just in case
+            from patients.models import Family
+            inviter.family = Family.objects.create(name=f"{inviter.first_name}'s Family")
+            inviter.save()
+
+        # Check if user already exists
+        member, created = Caregiver.objects.get_or_create(
+            phone_number=new_phone,
+            defaults={
+                'first_name': new_name,
+                'last_name': '',
+                'relationship': relationship,
+                'family': inviter.family
+            }
+        )
+
+        if not created:
+            # Retrieve existing user and link to family
+            # Note: This simply moves them to this family. In a real app, might need confirmation.
+            member.family = inviter.family
+            member.save()
+
+        return Response({
+            'message': 'Member added successfully',
+            'member_id': member.id,
+            'family_id': inviter.family.id
+        })
 
 class ChildTimelineView(APIView):
     """

@@ -55,6 +55,12 @@
         "mobile": "Mobile Number",
         "role": "Account Role",
         "save": "Save Changes",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "family_title": "My Family",
+        "add_member": "Add Member",
+        "invite_title": "Invite Family Member",
+        "relationship": "Relationship",
+        "login_credential_notice": "Login Credentials: Mobile Number & Password 'appeal'",
+        "invite_btn": "Invite Member"
     }
 }

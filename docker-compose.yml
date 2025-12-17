@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    image: sajitss/appeal:backend
+    container_name: appeal-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/db
+      - ./uploaded_media:/app/uploaded_media
+    environment:
+      - ALLOWED_HOSTS=*
+      - DEBUG=False
+    restart: always
+
+  frontend:
+    image: sajitss/appeal:frontend
+    container_name: appeal-frontend
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://appeal.prod.squirrelvision.ai/api
+      - INTERNAL_API_URL=http://backend:8000
