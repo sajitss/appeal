@@ -46,21 +46,30 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         if (milestoneId) fetchMilestone()
     }, [id, milestoneId])
 
+    const [errorMsg, setErrorMsg] = useState<string>("")
+
     // 2. Camera Setup
-    const startCamera = async () => {
+    const startCamera = async (useConstraints = true) => {
+        setPermission(null)
+        setErrorMsg("")
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }, // Prefer back camera
-                audio: true
-            })
+            const constraints = useConstraints ? { video: { facingMode: "environment" }, audio: true } : { video: true, audio: true }
+            const stream = await navigator.mediaDevices.getUserMedia(constraints)
+
             streamRef.current = stream
             if (videoRef.current) {
                 videoRef.current.srcObject = stream
             }
             setPermission(true)
-        } catch (err) {
+        } catch (err: any) {
             console.error("Camera denied", err)
+            // If overconstrained (e.g. no back camera on laptop), try generic
+            if (useConstraints && (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError')) {
+                console.log("Retrying with generic constraints...")
+                return startCamera(false)
+            }
             setPermission(false)
+            setErrorMsg(err.message || err.name || "Unknown error")
         }
     }
 
@@ -157,7 +166,21 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     }
 
     if (loading) return <div className="p-8 text-center text-gray-500">Preparing studio...</div>
-    if (permission === false) return <div className="p-8 text-center text-red-500">Camera access denied. Please enable permissions.</div>
+    if (permission === false) return (
+        <div className="p-8 text-center flex flex-col items-center justify-center min-h-screen bg-black text-white gap-4">
+            <div className="text-red-500 text-xl font-bold">Camera access denied</div>
+            <p className="text-gray-400 text-sm max-w-xs text-center">
+                Please enable camera permissions in your browser settings.
+            </p>
+            {errorMsg && <code className="text-xs bg-gray-900 p-2 rounded text-red-400">{errorMsg}</code>}
+            <Button onClick={() => startCamera(false)} className="bg-white text-black hover:bg-gray-200">
+                Retry Camera
+            </Button>
+            <Button variant="ghost" onClick={() => router.back()} className="text-gray-500">
+                Cancel
+            </Button>
+        </div>
+    )
 
     return (
         <div className="min-h-screen bg-black flex flex-col text-white">
