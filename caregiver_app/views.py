@@ -114,8 +114,8 @@ class CaregiverDashboardView(APIView):
             age_days = (today - child.date_of_birth).days
             age_months = int(age_days / 30)
 
-            # Check for active/pending milestones (Match TimelineView logic with +1 buffer)
-            cutoff_age = age_months + 1
+            # Check for active/pending milestones (Strict match to current age to align with UI cards)
+            cutoff_age = age_months
             
             # 1. Actionable (User needs to do something)
             # Status is PENDING or REJECTED, and age is within range
