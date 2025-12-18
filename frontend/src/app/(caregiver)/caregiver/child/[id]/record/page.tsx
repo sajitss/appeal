@@ -99,7 +99,12 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         }
 
         mediaRecorder.onstop = () => {
-            const blob = new Blob(localChunks, { type: "video/webm" })
+            // iOS Safari often produces 'video/mp4' or 'video/quicktime'. 
+            // Do NOT force 'video/webm' in the Blob constructor if we want it to play back natively on iOS.
+            // Using generic type allows the browser to handle it better, or we can try to detect.
+            const blob = new Blob(localChunks, { type: localChunks[0]?.type || 'video/mp4' })
+            console.log("Recording stopped. Blob size:", blob.size, "Type:", blob.type)
+
             setRecordedChunks(localChunks)
             setVideoBlob(blob)
 
@@ -138,8 +143,10 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         if (!videoBlob || !milestoneId) return
 
         const formData = new FormData()
-        // Create a file from blob
-        const file = new File([videoBlob], `evidence_${milestoneId}_${Date.now()}.webm`, { type: 'video/webm' })
+        // Create a file from blob. Use the blob's native type or default to mp4 for iOS compatibility.
+        // Note: Backend must accept various video formats.
+        const ext = videoBlob.type.includes('webm') ? 'webm' : 'mp4'
+        const file = new File([videoBlob], `evidence_${milestoneId}_${Date.now()}.${ext}`, { type: videoBlob.type })
         formData.append('file', file)
 
         setLoading(true) // Re-use loading state or add 'uploading'
@@ -224,6 +231,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                         <video
                             src={URL.createObjectURL(videoBlob)}
                             controls
+                            playsInline // Critical for iOS
                             className="max-h-full max-w-full"
                         />
                     </div>
